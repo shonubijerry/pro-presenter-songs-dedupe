@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "songs-db-worker",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-07-18",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "songs-db",
+      "database_id": "replace-with-your-d1-id",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "SONGS_BUCKET",
+      "bucket_name": "songs-db-bucket"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "PROCESS_QUEUE",
+        "queue": "songs-db-process"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "songs-db-process",
+        "max_batch_size": 1,
+        "max_batch_timeout": 3
+      }
+    ]
+  }
+}
