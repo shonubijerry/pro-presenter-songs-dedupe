@@ -88,9 +88,26 @@ export function buildDuplicateGroups(songs: SongFeature[], threshold: number): D
 export function chooseKeptFiles(songs: SongFeature[], groups: DuplicateGroup[]): Set<string> {
   const duplicateNames = new Set<string>();
   const keepSet = new Set<string>();
+  const encoder = new TextEncoder();
+  const sizeByFileName = new Map<string, number>(
+    songs.map((song) => [song.fileName, encoder.encode(song.rawText).length]),
+  );
 
   for (const group of groups) {
-    const sorted = [...group.members].sort((left, right) => right.score - left.score);
+    const sorted = [...group.members].sort((left, right) => {
+      const sizeDelta =
+        (sizeByFileName.get(right.fileName) ?? 0) - (sizeByFileName.get(left.fileName) ?? 0);
+      if (sizeDelta !== 0) {
+        return sizeDelta;
+      }
+
+      const scoreDelta = right.score - left.score;
+      if (scoreDelta !== 0) {
+        return scoreDelta;
+      }
+
+      return left.fileName.localeCompare(right.fileName);
+    });
     if (sorted.length > 0) {
       keepSet.add(sorted[0].fileName);
     }
