@@ -425,19 +425,39 @@ var html = htm_module_default.bind(k);
 var MAX_MB = 50;
 var POLL_INTERVAL_MS = 2500;
 var ICONS = {
-  upload: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l5 5h-3v6h-4V8H7l5-5zm-7 13h14v2H5v-2z" /></svg>`,
-  sparkle: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2zm7 10l1 2.9L23 16l-3 .9L19 20l-1-3.1L15 16l3-.9L19 12z" /></svg>`,
-  clock: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5.2l3.6 2.2-.9 1.5L11 13V7h2z" /></svg>`,
-  archive: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v4H4V4zm2 6h12v10H6V10zm3 2v2h6v-2H9z" /></svg>`,
-  info: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg>`,
-  check: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2l-3.5-3.5-1.4 1.4L9 19 20 8l-1.4-1.4-9.6 9.6z" /></svg>`
+  upload: html`<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 3l5 5h-3v6h-4V8H7l5-5zm-7 13h14v2H5v-2z" />
+  </svg>`,
+  sparkle: html`<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2zm7 10l1 2.9L23 16l-3 .9L19 20l-1-3.1L15 16l3-.9L19 12z"
+    />
+  </svg>`,
+  clock: html`<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5.2l3.6 2.2-.9 1.5L11 13V7h2z"
+    />
+  </svg>`,
+  archive: html`<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M4 4h16v4H4V4zm2 6h12v10H6V10zm3 2v2h6v-2H9z" />
+  </svg>`,
+  info: html`<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+    />
+  </svg>`,
+  check: html`<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M9 16.2l-3.5-3.5-1.4 1.4L9 19 20 8l-1.4-1.4-9.6 9.6z" />
+  </svg>`
 };
 function App() {
   const [file, setFile] = d2(null);
   const [threshold, setThreshold] = d2(0.75);
   const [autoMode, setAutoMode] = d2(true);
   const [uploadId, setUploadId] = d2("");
-  const [status, setStatus] = d2("Select a .zip file and start processing.");
+  const [status, setStatus] = d2(
+    "Select a .zip file and start processing."
+  );
   const [summary, setSummary] = d2(null);
   const [download, setDownload] = d2(null);
   const [groups, setGroups] = d2([]);
@@ -477,7 +497,10 @@ function App() {
   const fileLabel = file ? `${file.name} \xB7 ${(file.size / (1024 * 1024)).toFixed(1)} MB` : `Choose a .zip up to ${MAX_MB}MB`;
   h2(() => {
     if (file && file.size > MAX_MB * 1024 * 1024) {
-      pushToast("warning", `This file is larger than ${MAX_MB}MB and cannot be uploaded.`);
+      pushToast(
+        "warning",
+        `This file is larger than ${MAX_MB}MB and cannot be uploaded.`
+      );
     }
   }, [file, pushToast]);
   h2(() => {
@@ -520,8 +543,13 @@ function App() {
           }
           await loadGroups(uploadId);
           setBusy(false);
-          setStatus("Review selections below. You can change kept/discarded files before generating the final archive.");
-          pushToast("info", "Selections are ready for review. Adjust if needed, then generate the archive.");
+          setStatus(
+            "Review selections below. You can change kept/discarded files before generating the final archive."
+          );
+          pushToast(
+            "info",
+            "Selections are ready for review. Adjust if needed, then generate the archive."
+          );
           return;
         }
         if (currentStatus === "failed") {
@@ -553,7 +581,9 @@ function App() {
       return;
     }
     try {
-      const response = await fetch(`/api/duplicates?uploadId=${encodeURIComponent(nextUploadId)}`);
+      const response = await fetch(
+        `/api/duplicates?uploadId=${encodeURIComponent(nextUploadId)}`
+      );
       const data = await response.json();
       if (response.ok) {
         setGroups(data.groups || []);
@@ -593,7 +623,10 @@ function App() {
         }
         setUploadId(data.uploadId);
         setStatus("Upload complete, waiting for processing...");
-        pushToast("info", "Upload received. Processing will continue in the background.");
+        pushToast(
+          "info",
+          "Upload received. Processing will continue in the background."
+        );
       } catch {
         setStatus("Upload failed due to network error.");
         setBusy(false);
@@ -602,34 +635,52 @@ function App() {
     },
     [autoMode, canUpload, file, pushToast, threshold]
   );
-  const keepOne = q2(async (groupId, songId) => {
-    try {
-      const response = await fetch(`/api/groups/${groupId}/keep/${songId}`, { method: "POST" });
-      const data = await response.json();
-      if (!response.ok) {
-        pushToast("error", data.error || "Failed to mark song as kept.");
-        return;
+  const keepOne = q2(
+    async (groupId, songId) => {
+      try {
+        const response = await fetch(`/api/groups/${groupId}/keep/${songId}`, {
+          method: "POST"
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          pushToast("error", data.error || "Failed to mark song as kept.");
+          return;
+        }
+        await loadGroups(uploadId);
+        if (typeof data.keptFiles === "number") {
+          setSummary(
+            (current) => current ? {
+              ...current,
+              ...data.keptFiles ? { kept_files: data.keptFiles } : {}
+            } : current
+          );
+        }
+        pushToast(
+          "success",
+          "Song marked as kept. Others in this group will be excluded."
+        );
+      } catch {
+        pushToast("error", "Network error while saving choice.");
       }
-      await loadGroups(uploadId);
-      if (typeof data.keptFiles === "number") {
-        setSummary((current) => current ? { ...current, kept_files: data.keptFiles } : current);
-      }
-      pushToast("success", "Song marked as kept. Others in this group will be excluded.");
-    } catch {
-      pushToast("error", "Network error while saving choice.");
-    }
-  }, [loadGroups, pushToast, uploadId]);
+    },
+    [loadGroups, pushToast, uploadId]
+  );
   const finalize = q2(async () => {
     if (!uploadId) return;
     setFinalizing(true);
     try {
-      const response = await fetch(`/api/uploads/${uploadId}/finalize`, { method: "POST" });
+      const response = await fetch(`/api/uploads/${uploadId}/finalize`, {
+        method: "POST"
+      });
       const data = await response.json();
       if (!response.ok || !data.url) {
         pushToast("error", data.error || "Finalize failed.");
         return;
       }
-      setDownload({ url: data.url, expiresAt: data.expiresAt || new Date(Date.now() + 7 * 864e5).toISOString() });
+      setDownload({
+        url: data.url,
+        expiresAt: data.expiresAt || new Date(Date.now() + 7 * 864e5).toISOString()
+      });
       setStatus("Done. Download your de-duplicated archive.");
       pushToast("success", "Archive generated. Download is ready.");
       const statusResp = await fetch(`/api/uploads/${uploadId}`);
@@ -649,7 +700,9 @@ function App() {
       return;
     }
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}${download.url}`);
+      await navigator.clipboard.writeText(
+        `${window.location.origin}${download.url}`
+      );
       pushToast("success", "Download link copied to clipboard.");
     } catch {
       pushToast("error", "Could not copy the link. Please copy it manually.");
@@ -665,7 +718,8 @@ function App() {
           <p className="eyebrow">Cloudflare Worker + D1</p>
           <h1>Song de-duplication, designed for quick review.</h1>
           <p className="hero-text">
-            Upload a zip once, process it in the background, and return later for a clean, shareable download link.
+            Upload a zip once, process it in the background, and return later
+            for a clean, shareable download link.
           </p>
           <div className="feature-row">
             <span className="chip">${ICONS.upload} 50MB upload cap</span>
@@ -680,8 +734,9 @@ function App() {
             <span>Free-tier friendly workflow</span>
           </div>
           <p>
-            The worker keeps storage lean, removes the uploaded archive after processing, and retains only the data
-            needed to reconstruct the output.
+            The worker keeps storage lean, removes the uploaded archive after
+            processing, and retains only the data needed to reconstruct the
+            output.
           </p>
         </div>
       </section>
@@ -691,9 +746,15 @@ function App() {
           <div className="panel-head">
             <div>
               <h2>Upload archive</h2>
-              <p>Use a single zip file. The worker processes it asynchronously.</p>
+              <p>
+                Use a single zip file. The worker processes it asynchronously.
+              </p>
             </div>
-            <span className="hint" title="This keeps the app within Cloudflare free-tier limits.">${ICONS.info}</span>
+            <span
+              className="hint"
+              title="This keeps the app within Cloudflare free-tier limits."
+              >${ICONS.info}</span
+            >
           </div>
 
           <form onSubmit=${submit}>
@@ -711,7 +772,9 @@ function App() {
                 />
                 <div className="file-meta">
                   <strong>${fileLabel}</strong>
-                  <span>${file ? "Ready to upload" : "Choose a zip file from your device"}</span>
+                  <span
+                    >${file ? "Ready to upload" : "Choose a zip file from your device"}</span
+                  >
                 </div>
               </div>
             </label>
@@ -719,7 +782,9 @@ function App() {
             <label className="field">
               <div className="field-label-row">
                 <span>Duplicate threshold</span>
-                <span className="value-pill">${(threshold * 100).toFixed(0)}%</span>
+                <span className="value-pill"
+                  >${(threshold * 100).toFixed(0)}%</span
+                >
               </div>
               <input
                 type="range"
@@ -736,10 +801,19 @@ function App() {
             </label>
 
             <div className="actions-row">
-              <button className="btn btn-primary" type="submit" disabled=${busy || !canUpload}>
+              <button
+                className="btn btn-primary"
+                type="submit"
+                disabled=${busy || !canUpload}
+              >
                 ${busy ? html`${ICONS.clock} Processing` : html`${ICONS.upload} Upload and process`}
               </button>
-              <button className="btn btn-secondary" type="button" onClick=${() => void loadGroups(uploadId)} disabled=${!uploadId || busy}>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick=${() => void loadGroups(uploadId)}
+                disabled=${!uploadId || busy}
+              >
                 Refresh results
               </button>
             </div>
@@ -752,12 +826,17 @@ function App() {
                 disabled=${busy}
               />
               <span>Auto-select duplicates on upload</span>
-              <small>When checked, best matches are preselected but you can still change them before finalizing</small>
+              <small
+                >When checked, best matches are preselected but you can still
+                change them before finalizing</small
+              >
             </label>
           </form>
 
           <div className="status-strip">
-            <span className=${`status-badge ${summary?.status || "idle"}`}>${summary?.status || "idle"}</span>
+            <span className=${`status-badge ${summary?.status || "idle"}`}
+              >${summary?.status || "idle"}</span
+            >
             <p className="status">${status}</p>
           </div>
         </section>
@@ -766,8 +845,16 @@ function App() {
           <h2>How it works</h2>
           <ol className="steps">
             <li>${ICONS.upload}<span>Upload one zip with your songs.</span></li>
-            <li>${ICONS.sparkle}<span>Worker queues and scans it in the background.</span></li>
-            <li>${ICONS.check}<span>Download the deduplicated zip from a timed link.</span></li>
+            <li>
+              ${ICONS.sparkle}<span
+                >Worker queues and scans it in the background.</span
+              >
+            </li>
+            <li>
+              ${ICONS.check}<span
+                >Download the deduplicated zip from a timed link.</span
+              >
+            </li>
           </ol>
         </aside>
       </section>
@@ -792,43 +879,64 @@ function App() {
               </article>
             </section>
           ` : null}
-
       ${download ? html`
             <section className="panel download">
               <div className="panel-head">
                 <div>
                   <h2>De-duplicated archive ready</h2>
-                  <p>Download link expires on ${new Date(download.expiresAt).toLocaleString()}.</p>
+                  <p>
+                    Download link expires on
+                    ${new Date(download.expiresAt).toLocaleString()}.
+                  </p>
                 </div>
-                <span className="hint" title="This link is safe to revisit until it expires.">${ICONS.info}</span>
+                <span
+                  className="hint"
+                  title="This link is safe to revisit until it expires."
+                  >${ICONS.info}</span
+                >
               </div>
               <div className="download-actions">
-                <a href=${download.url} className="btn btn-primary">${ICONS.archive} Download zip</a>
-                <button className="btn btn-secondary" type="button" onClick=${copyDownloadLink}>Copy link</button>
+                <a href=${download.url} className="btn btn-primary"
+                  >${ICONS.archive} Download zip</a
+                >
+                <button
+                  className="btn btn-secondary"
+                  type="button"
+                  onClick=${copyDownloadLink}
+                >
+                  Copy link
+                </button>
               </div>
             </section>
           ` : null}
-
       ${summary?.status === "review" ? html`
             <section className="panel review-cta">
               <div>
-                <h2>${groups.length > 0 ? "Review complete?" : "No duplicates found"}</h2>
+                <h2>
+                  ${groups.length > 0 ? "Review complete?" : "No duplicates found"}
+                </h2>
                 <p>
                   ${groups.length > 0 ? "Review preselected choices or adjust them, then generate the deduplicated archive." : "This upload reached manual review mode, but no duplicate groups were detected above the current threshold. You can generate the archive as-is."}
                 </p>
               </div>
-              <button className="btn btn-primary" type="button" onClick=${finalize} disabled=${finalizing}>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick=${finalize}
+                disabled=${finalizing}
+              >
                 ${finalizing ? html`${ICONS.clock} Generating…` : html`${ICONS.archive} Generate download`}
               </button>
             </section>
           ` : null}
-
       ${groups.length > 0 ? html`
             <section className="panel groups">
               <div className="panel-head">
                 <div>
                   <h2>Duplicate groups</h2>
-                  <p>${summary?.status === "review" ? "Choose which file to keep in each group. Others will be excluded from the download." : "Sorted by similarity. The first file in each group was kept automatically."}</p>
+                  <p>
+                    ${summary?.status === "review" ? "Choose which file to keep in each group. Others will be excluded from the download." : "Sorted by similarity. The first file in each group was kept automatically."}
+                  </p>
                 </div>
               </div>
               <div className="group-list">
@@ -844,17 +952,33 @@ function App() {
       const groupHasSelection = summary?.status === "review" && group.members.some((entry) => entry.keptInOutput);
       const reviewState = summary?.status === "review" ? member.keptInOutput ? "selected" : groupHasSelection ? "discarded" : "pending" : member.keptInOutput ? "kept" : "discarded";
       return html`
-                            <div className=${`member-card ${reviewState}`} key=${member.songId}>
+                            <div
+                              className=${`member-card ${reviewState}`}
+                              key=${member.songId}
+                            >
                               <div className="member-header">
-                                <strong className="name">${member.fileName}</strong>
-                                <span className="score">${Math.round(member.score * 100)}%</span>
+                                <strong className="name"
+                                  >${member.fileName}</strong
+                                >
+                                <span className="score"
+                                  >${Math.round(member.score * 100)}%</span
+                                >
                               </div>
                               ${summary?.status === "review" ? html`
                                     <div className="member-state-row">
-                                      ${member.keptInOutput ? html`<span className="kept-label">${ICONS.check} Selected to keep</span>` : groupHasSelection ? html`<span className="removed-label">Will be discarded</span>` : html`<span className="pending-label">Awaiting your choice</span>`}
+                                      ${member.keptInOutput ? html`<span className="kept-label"
+                                            >${ICONS.check} Selected to
+                                            keep</span
+                                          >` : groupHasSelection ? html`<span className="removed-label"
+                                              >Will be discarded</span
+                                            >` : html`<span className="pending-label"
+                                              >Awaiting your choice</span
+                                            >`}
                                     </div>
                                   ` : null}
-                              <pre className="member-text">${member.rawText}</pre>
+                              <pre className="member-text">
+${member.rawText}</pre
+                              >
                               ${summary?.status === "review" ? html`
                                     <button
                                       className="btn btn-keep"
@@ -864,7 +988,11 @@ function App() {
                                     >
                                       ${member.keptInOutput ? html`${ICONS.check} Selected` : groupHasSelection ? "Keep instead" : html`${ICONS.check} Keep this one`}
                                     </button>
-                                  ` : member.keptInOutput ? html`<span className="kept-label">${ICONS.check} Kept</span>` : html`<span className="removed-label">Excluded</span>`}
+                                  ` : member.keptInOutput ? html`<span className="kept-label"
+                                      >${ICONS.check} Kept</span
+                                    >` : html`<span className="removed-label"
+                                      >Excluded</span
+                                    >`}
                             </div>
                           `;
     })}
