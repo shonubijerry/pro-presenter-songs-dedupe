@@ -7,12 +7,20 @@ export function buildFeature(fileName: string, rawText: string): SongFeature {
     .split("\n")
     .map((line) => line.trim().toLowerCase().replace(/\s+/g, " "))
     .filter(Boolean);
+  const normalizedText = normalizedLines.join("\n");
+  const lineFreq = buildFrequency(normalizedLines);
+  const bigramFreq = buildBigramFrequency(normalizedText);
+  const bigramCount = countFrequencyItems(bigramFreq);
 
   return {
     fileName,
     rawText,
     normalizedLines,
+    normalizedText,
     lineCount: normalizedLines.length,
+    lineFreq,
+    bigramCount,
+    bigramFreq,
   };
 }
 
@@ -36,17 +44,13 @@ export function buildDuplicateGroups(songs: SongFeature[], threshold: number): D
     }
   };
 
-  const scoreMatrix: number[][] = new Array(count);
-  for (let i = 0; i < count; i += 1) {
-    scoreMatrix[i] = new Array(count).fill(0);
-    scoreMatrix[i][i] = 1;
-  }
-
   for (let i = 0; i < count; i += 1) {
     for (let j = i + 1; j < count; j += 1) {
+      if (!canReachThreshold(songs[i], songs[j], threshold)) {
+        continue;
+      }
+
       const score = similarityScore(songs[i], songs[j]);
-      scoreMatrix[i][j] = score;
-      scoreMatrix[j][i] = score;
       if (score >= threshold) {
         union(i, j);
       }
@@ -71,7 +75,7 @@ export function buildDuplicateGroups(songs: SongFeature[], threshold: number): D
     const members = memberIndexes
       .map((songIndex) => ({
         fileName: songs[songIndex].fileName,
-        score: songIndex === anchor ? 1 : scoreMatrix[anchor][songIndex],
+        score: songIndex === anchor ? 1 : similarityScore(songs[anchor], songs[songIndex]),
       }))
       .sort((left, right) => right.score - left.score);
 
@@ -117,39 +121,93 @@ function similarityScore(left: SongFeature, right: SongFeature): number {
   if (left.lineCount === 0 || right.lineCount === 0) {
     return 0;
   }
-  const lineRatio = multisetDice(left.normalizedLines, right.normalizedLines);
-  const textRatio = bigramDice(left.normalizedLines.join("\n"), right.normalizedLines.join("\n"));
+
+  const lineRatio = multisetDiceFromFreq(left.lineFreq, left.lineCount, right.lineFreq, right.lineCount);
+  const textRatio =
+    left.bigramCount === 0 || right.bigramCount === 0
+      ? left.normalizedText === right.normalizedText
+        ? 1
+        : 0
+      : multisetDiceFromFreq(left.bigramFreq, left.bigramCount, right.bigramFreq, right.bigramCount);
+
   return (lineRatio + textRatio) / 2;
 }
 
-/** 2*|multiset intersection| / (|a| + |b|) — matches Python SequenceMatcher on lists */
-function multisetDice(a: string[], b: string[]): number {
-  if (a.length + b.length === 0) return 1;
-  const freq = new Map<string, number>();
-  for (const item of a) freq.set(item, (freq.get(item) ?? 0) + 1);
-  let matches = 0;
-  for (const item of b) {
-    const n = freq.get(item) ?? 0;
-    if (n > 0) { matches++; freq.set(item, n - 1); }
+function canReachThreshold(left: SongFeature, right: SongFeature, threshold: number): boolean {
+  const maxLineRatio = maxDiceByCount(left.lineCount, right.lineCount);
+  const maxAverageFromLineBound = (maxLineRatio + 1) / 2;
+  if (maxAverageFromLineBound < threshold) {
+    return false;
   }
-  return (2 * matches) / (a.length + b.length);
+
+  const maxTextRatio = maxDiceByCount(left.bigramCount, right.bigramCount);
+  const maxAverageFromTextBound = (1 + maxTextRatio) / 2;
+  if (maxAverageFromTextBound < threshold) {
+    return false;
+  }
+
+  return true;
 }
 
-/** Bigram Dice coefficient — approximates Python SequenceMatcher on joined text */
-function bigramDice(a: string, b: string): number {
-  if (a.length + b.length < 4) return a === b ? 1 : 0;
-  const freq = new Map<string, number>();
-  for (let i = 0; i < a.length - 1; i++) {
-    const bg = a.slice(i, i + 2);
-    freq.set(bg, (freq.get(bg) ?? 0) + 1);
+function maxDiceByCount(leftCount: number, rightCount: number): number {
+  const total = leftCount + rightCount;
+  if (total === 0) {
+    return 1;
   }
+
+  return (2 * Math.min(leftCount, rightCount)) / total;
+}
+
+/** 2*|multiset intersection| / (|a| + |b|) — matches Python SequenceMatcher on lists */
+function multisetDiceFromFreq(
+  leftFreq: Map<string, number>,
+  leftCount: number,
+  rightFreq: Map<string, number>,
+  rightCount: number,
+): number {
+  const total = leftCount + rightCount;
+  if (total === 0) {
+    return 1;
+  }
+
+  const [smaller, larger] =
+    leftFreq.size <= rightFreq.size ? [leftFreq, rightFreq] : [rightFreq, leftFreq];
+
   let intersection = 0;
-  for (let i = 0; i < b.length - 1; i++) {
-    const bg = b.slice(i, i + 2);
-    const n = freq.get(bg) ?? 0;
-    if (n > 0) { intersection++; freq.set(bg, n - 1); }
+  for (const [item, count] of smaller) {
+    const otherCount = larger.get(item) ?? 0;
+    intersection += Math.min(count, otherCount);
   }
-  const totalA = Math.max(0, a.length - 1);
-  const totalB = Math.max(0, b.length - 1);
-  return (2 * intersection) / (totalA + totalB);
+
+  return (2 * intersection) / total;
+}
+
+function buildFrequency(items: string[]): Map<string, number> {
+  const freq = new Map<string, number>();
+  for (const item of items) {
+    freq.set(item, (freq.get(item) ?? 0) + 1);
+  }
+  return freq;
+}
+
+function buildBigramFrequency(text: string): Map<string, number> {
+  const freq = new Map<string, number>();
+  if (text.length < 2) {
+    return freq;
+  }
+
+  for (let i = 0; i < text.length - 1; i += 1) {
+    const bigram = text.slice(i, i + 2);
+    freq.set(bigram, (freq.get(bigram) ?? 0) + 1);
+  }
+
+  return freq;
+}
+
+function countFrequencyItems(freq: Map<string, number>): number {
+  let total = 0;
+  for (const count of freq.values()) {
+    total += count;
+  }
+  return total;
 }

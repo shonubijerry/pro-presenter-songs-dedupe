@@ -21,7 +21,11 @@ export type SongFeature = {
   fileName: string;
   rawText: string;
   normalizedLines: string[];
+  normalizedText: string;
   lineCount: number;
+  lineFreq: Map<string, number>;
+  bigramCount: number;
+  bigramFreq: Map<string, number>;
 };
 
 export type DuplicateGroup = {
