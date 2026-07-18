@@ -1,0 +1,10 @@
+# Local database and cache
+duplicates.db
+__pycache__/
+*.pyc
+node_modules/
+.wrangler/
+dist/
+.wranler
+lyrics
+.DS_Store

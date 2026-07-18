@@ -1,0 +1,26 @@
+{
+  "name": "songs-db-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:frontend": "esbuild public/app.ts --bundle --format=esm --target=es2022 --outfile=public/app.js",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 migrations apply songs-db",
+    "lint:frontend": "npm run build:frontend",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2",
+    "htm": "^3.1.1",
+    "itty-router": "^5.0.22",
+    "preact": "^10.26.9"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260718.1",
+    "esbuild": "^0.25.8",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.112.0"
+  }
+}
