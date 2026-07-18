@@ -210,7 +210,7 @@ function App() {
           await loadGroups(uploadId);
           setBusy(false);
           setStatus(
-            "Review selections below. You can change kept/discarded files before generating the final archive.",
+            "Review selections below.",
           );
           pushToast(
             "info",
@@ -412,29 +412,17 @@ function App() {
 
       <section className="hero panel">
         <div className="hero-copy">
-          <p className="eyebrow">Cloudflare Worker + D1</p>
-          <h1>Song de-duplication, designed for quick review.</h1>
+          <p className="eyebrow">v1.1</p>
+          <h1>ProPresenter Lyrics De-duplicator</h1>
           <p className="hero-text">
             Upload a zip once, process it in the background, and return later
             for a clean, shareable download link.
           </p>
           <div className="feature-row">
-            <span className="chip">${ICONS.upload} 50MB upload cap</span>
+            <span className="chip">${ICONS.upload} 50MB max upload</span>
             <span className="chip">${ICONS.sparkle} Background scan</span>
             <span className="chip">${ICONS.archive} Download link</span>
           </div>
-        </div>
-
-        <div className="hero-card">
-          <div className="hero-card-top">
-            <span className="status-dot"></span>
-            <span>Free-tier friendly workflow</span>
-          </div>
-          <p>
-            The worker keeps storage lean, removes the uploaded archive after
-            processing, and retains only the data needed to reconstruct the
-            output.
-          </p>
         </div>
       </section>
 
@@ -472,7 +460,7 @@ function App() {
                   <span
                     >${file
                       ? "Ready to upload"
-                      : "Choose a zip file from your device"}</span
+                      : "Choose a zip file that contains .txt files"}</span
                   >
                 </div>
               </div>
@@ -651,7 +639,7 @@ function App() {
                   <h2>Duplicate groups</h2>
                   <p>
                     ${summary?.status === "review"
-                      ? "Choose which file to keep in each group. Others will be excluded from the download."
+                      ? "Choose which file to keep in each group. Others will be excluded from the final download."
                       : "Sorted by similarity. The first file in each group was kept automatically."}
                   </p>
                 </div>
