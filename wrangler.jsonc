@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "songs-db",
-      "database_id": "replace-with-your-d1-id",
+      "database_id": "dfd2a924-4695-48db-bf2a-e91e508c5de6",
       "migrations_dir": "migrations"
     }
   ],
@@ -31,9 +31,9 @@
     "consumers": [
       {
         "queue": "songs-db-process",
-        "max_batch_size": 1,
+        "max_batch_size": 10,
         "max_batch_timeout": 3
       }
     ]
-  }
+  },
 }
